@@ -17,13 +17,16 @@ from {{cookiecutter.project_slug}}.application import Application
 from {{cookiecutter.project_slug}}.persistent.postgres import PostgreSQLConnector
 {%- endif %}
 from tornado.options import (define as tornado_define,
-                             options as tornado_options)
+                             options as tornado_options,
+                             parse_config_file)
 import logging
 import tornado.ioloop
 import tornado.httpserver
 
 tornado_define('workers', default=0,
                help="num of workers", type=int)
+tornado_define("config", type=str, help="path to config file",
+               callback=lambda path: parse_config_file(path, final=False))
 LOG = logging.getLogger('tornado.application')  # noqa
 
 
