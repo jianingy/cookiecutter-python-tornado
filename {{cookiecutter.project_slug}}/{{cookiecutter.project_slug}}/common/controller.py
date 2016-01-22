@@ -23,9 +23,10 @@ class BaseController(tornado.web.RequestHandler):
 class APIBaseController(BaseController):
 
     def response(self, data):
-        self.write(json_encode(data))
-        self.finish()
+        self.finish(json_encode(data))
 
 
 class HTMLBaseController(BaseController):
-    pass
+
+    def response(self, name, data):
+        self.render('%s.html' % name, **data)

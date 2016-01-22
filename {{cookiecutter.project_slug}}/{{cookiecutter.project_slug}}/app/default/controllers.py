@@ -13,20 +13,28 @@
 #                             21 Jan, 2016
 #
 from {{cookiecutter.project_slug}}.common.route import route
-from {{cookiecutter.project_slug}}.common.controller import APIBaseController
+from {{cookiecutter.project_slug}}.common import controller
 from tornado.gen import coroutine
 
+@route('/')
+class IndexController(controller.HTMLBaseController):
+
+    @coroutine
+    def get(self):
+        self.response('default/default',
+                      dict(version='{{cookiecutter.version}}'))
 
 @route('/api/v1/version')
-class VersionHandler(APIBaseController):
+class VersionController(controller.APIBaseController):
 
+    @coroutine
     def get(self):
         self.response(dict(version='{{cookiecutter.version}}'))
 
 
 {%- if cookiecutter.use_database %}
 @route('/api/v1/add/(\d+)/(\d+)')
-class AddHandler(APIBaseController):
+class AddController(controller.APIBaseController):
 
     @coroutine
     def get(self, x, y):
