@@ -12,11 +12,7 @@
 # +--+--+--+--+--+--+--+--+--+--+--+--+--+
 #                             21 Jan, 2016
 #
-
 from {{cookiecutter.project_slug}}.common.route import route
-{%- if cookiecutter.use_database %}
-from {{cookiecutter.project_slug}}.persistent.postgres import PostgreSQLConnector
-{%- endif %}
 from tornado.options import (define as tornado_define,
                              options as tornado_options)
 from os.path import join as path_join, dirname
@@ -68,10 +64,6 @@ class Application(tornado.web.Application):
         )
         controllers = route.get_routes()
         tornado.web.Application.__init__(self, controllers, **webapp_settings)
-        {%- if cookiecutter.use_database %}
-        database = PostgreSQLConnector()
-        database.connect()
-        {%- endif %}
 
 
 # Load apps during evaluation. So tornado_define can be

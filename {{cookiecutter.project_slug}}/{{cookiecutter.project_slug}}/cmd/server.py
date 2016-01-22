@@ -13,12 +13,17 @@
 #                             21 Jan, 2016
 #
 from {{cookiecutter.project_slug}}.application import Application
-from tornado.options import options as tornado_options
+{%- if cookiecutter.use_database %}
+from {{cookiecutter.project_slug}}.persistent.postgres import PostgreSQLConnector
+{%- endif %}
+from tornado.options import (define as tornado_define,
+                             options as tornado_options)
 import logging
 import tornado.ioloop
 import tornado.httpserver
 
-
+tornado_define('workers', default=0,
+               help="num of workers", type=int)
 LOG = logging.getLogger('tornado.application')  # noqa
 
 
@@ -35,6 +40,10 @@ def main():
     else:
         server = tornado.httpserver.HTTPServer(app)
         server.bind(int(bind_port), address=bind_address)
-        server.start(0)
-
-    tornado.ioloop.IOLoop.instance().start()
+        server.start(tornado_options.workers)
+    io_loop = tornado.ioloop.IOLoop.instance()
+    {%- if cookiecutter.use_database %}
+    database = PostgreSQLConnector()
+    io_loop.add_callback(database.connect)
+    {%- endif %}
+    io_loop.start()
