@@ -31,7 +31,6 @@ class VersionController(controller.APIBaseController):
     def get(self):
         self.response(dict(version='{{cookiecutter.version}}'))
 
-
 {%- if cookiecutter.use_database %}
 @route('/api/v1/add/(\d+)/(\d+)')
 class AddController(controller.APIBaseController):
@@ -41,5 +40,14 @@ class AddController(controller.APIBaseController):
         from {{cookiecutter.project_slug}}.app.default.services import add
         retval = yield add(x, y)
         self.response(dict(x=x, y=y, val=retval))
-
 {%- endif %}
+
+@route('/api/v1/mul')
+class MulController(controller.APIBaseController):
+
+    @coroutine
+    def post(self):
+        data = self.data
+        a = int(data['a'])
+        b = int(data['b'])
+        self.response(dict(a=a, b=b, val=a * b))
