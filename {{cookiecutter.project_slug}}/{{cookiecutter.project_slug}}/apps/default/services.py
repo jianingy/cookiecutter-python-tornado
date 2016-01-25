@@ -12,7 +12,7 @@
 # +--+--+--+--+--+--+--+--+--+--+--+--+--+
 #                             22 Jan, 2016
 #
-{%- if cookiecutter.use_database %}
+{%- if cookiecutter.use_database == 'y' %}
 from {{cookiecutter.project_slug}}.persistent.postgres import PostgreSQLConnector
 from {{cookiecutter.project_slug}}.persistent.postgres import connection as database_connection
 from {{cookiecutter.project_slug}}.common.database import fetchall_as_dict

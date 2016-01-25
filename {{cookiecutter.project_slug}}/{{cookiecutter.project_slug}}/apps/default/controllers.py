@@ -31,13 +31,13 @@ class VersionController(controller.APIBaseController):
     def get(self):
         self.response(dict(version='{{cookiecutter.version}}'))
 
-{%- if cookiecutter.use_database %}
+{%- if cookiecutter.use_database == 'y' %}
 @route('/api/v1/add/(\d+)/(\d+)')
 class AddController(controller.APIBaseController):
 
     @coroutine
     def get(self, x, y):
-        from {{cookiecutter.project_slug}}.app.default.services import add
+        from {{cookiecutter.project_slug}}.apps.default.services import add
         retval = yield add(x, y)
         self.response(dict(x=x, y=y, val=retval))
 {%- endif %}

@@ -13,7 +13,7 @@
 #                             21 Jan, 2016
 #
 from {{cookiecutter.project_slug}}.application import Application
-{%- if cookiecutter.use_database %}
+{%- if cookiecutter.use_database == 'y' %}
 from {{cookiecutter.project_slug}}.persistent import postgres
 {%- endif %}
 from tornado.options import (define as tornado_define,
@@ -45,7 +45,7 @@ def main():
         server.bind(int(bind_port), address=bind_address)
         server.start(tornado_options.workers)
     io_loop = tornado.ioloop.IOLoop.instance()
-    {%- if cookiecutter.use_database %}
+    {%- if cookiecutter.use_database == 'y' %}
     postgres.init(io_loop)
     {%- endif %}
     io_loop.start()

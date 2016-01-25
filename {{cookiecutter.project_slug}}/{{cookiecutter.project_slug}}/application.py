@@ -24,7 +24,7 @@ import logging
 tornado_define('debug', default=False, help="debug", type=bool)
 tornado_define('bind', default='127.0.0.1:8000', help="server bind address")
 tornado_define('enabled-apps',
-               default=['{{cookiecutter.project_slug}}.app.default'],
+               default=['{{cookiecutter.project_slug}}.apps.default'],
                multiple=True, help="server bind address")
 
 LOG = logging.getLogger('tornado.application')
@@ -59,7 +59,7 @@ class Application(tornado.web.Application):
             debug=tornado_options.debug,
             autoreload=tornado_options.debug,
             ui_modules=ui_modules_map,
-            template_path=path_join(server_root, "template"),
+            template_path=path_join(server_root, "templates"),
             static_path=path_join(server_root, "static"),
         )
         controllers = route.get_routes()
