@@ -13,21 +13,11 @@
 #                             22 Jan, 2016
 #
 from tornado.gen import coroutine
-from tornado.options import (define as tornado_define,
-                             options as tornado_options)
 from urlparse import urlparse
 import functools
 import momoko
 import logging
 import tornado.ioloop
-
-tornado_define('postgres-uri', default='postgres:///',
-               help="postgresql connection uri")
-tornado_define('postgres-max-pool-size', default=4,
-               help='maximum connection pool size of PostgreSQL')
-tornado_define('postgres-reconnect-interval', default=5,
-               help='maximum connection pool size of PostgreSQL')
-
 
 LOG = logging.getLogger('tornado.application')
 
@@ -54,8 +44,8 @@ class PostgreSQLConnector(object):
 
     @classmethod
     @coroutine
-    def connect(cls, **kwd):
-        r = urlparse(tornado_options.postgres_uri)
+    def connect(cls, uri, **kwd):
+        r = urlparse(uri)
         if r.scheme.lower() != 'postgres':
             raise PostgreSQLConnector('uri should starts with postgres://')
 
@@ -67,10 +57,8 @@ class PostgreSQLConnector(object):
                                 user=r.username,
                                 password=r.password,
                                 dbname=r.path.lstrip('/') or r.username)
-        interval = kwd.get('reconnect_interval',
-                           tornado_options.postgres_reconnect_interval)
-        size = kwd.get('max_pool_size',
-                       tornado_options.postgres_max_pool_size)
+        interval = kwd.get('reconnect_interval', 5)
+        size = kwd.get('max_pool_size', 4)
         LOG.info('Database connection string is %s' % dsn)
         cls._pool = momoko.Pool(
             dsn=dsn,
@@ -86,11 +74,11 @@ class PostgreSQLConnector(object):
         return cls.connection().close()
 
 
-def init(io_loop=None):
+def init(uri, name='master', io_loop=None, **kwargs):
     if not io_loop:
         io_loop = tornado.ioloop.IOLoop.instance()
-    database = PostgreSQLConnector()
-    io_loop.add_callback(database.connect)
+    instance = PostgreSQLConnector.instance(name)
+    io_loop.add_callback(instance.connect, uri, **kwargs)
 
 
 def connection(method=None, name="master"):
@@ -98,9 +86,9 @@ def connection(method=None, name="master"):
     def wrapper(function):
 
         @functools.wraps(function)
-        def f(*args, **kwds):
+        def f(*args, **kwargs):
             db = PostgreSQLConnector.instance(name).connection()
-            return function(db, *args, **kwds)
+            return function(db, *args, **kwargs)
         return f
 
     return wrapper

@@ -12,24 +12,28 @@
 # +--+--+--+--+--+--+--+--+--+--+--+--+--+
 #                             21 Jan, 2016
 #
-from {{cookiecutter.project_slug}}.common.route import route
-from {{cookiecutter.project_slug}}.common import controller
+from {{ cookiecutter.project_slug }}.common.route import route
+from {{ cookiecutter.project_slug }}.common import controller
 from tornado.gen import coroutine
+import pkg_resources
+
 
 @route('/')
 class IndexController(controller.HTMLBaseController):
 
     @coroutine
     def get(self):
+        version = pkg_resources.require('{{ cookiecutter.project_slug }}')[0].version
         self.response('default/default',
-                      dict(version='{{cookiecutter.version}}'))
+                      dict(version=version))
 
 @route('/api/v1/version')
 class VersionController(controller.APIBaseController):
 
     @coroutine
     def get(self):
-        self.response(dict(version='{{cookiecutter.version}}'))
+        version = pkg_resources.require('{{ cookiecutter.project_slug }}')[0].version
+        self.response(dict(version=version))
 
 {%- if cookiecutter.use_database == 'y' %}
 @route('/api/v1/add/(\d+)/(\d+)')

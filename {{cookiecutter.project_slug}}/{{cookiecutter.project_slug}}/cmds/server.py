@@ -25,6 +25,14 @@ import tornado.httpserver
 
 tornado_define('workers', default=0,
                help="num of workers", type=int)
+{%- if cookiecutter.use_database == 'y' %}
+tornado_define('postgres-uri', default='postgres:///',
+               help="postgresql connection uri")
+tornado_define('postgres-max-pool-size', default=4,
+               help='maximum connection pool size of PostgreSQL')
+tornado_define('postgres-reconnect-interval', default=5,
+               help='maximum connection pool size of PostgreSQL')
+{%- endif %}
 tornado_define("config", type=str, help="path to config file",
                callback=lambda path: parse_config_file(path, final=False))
 LOG = logging.getLogger('tornado.application')  # noqa
@@ -46,6 +54,11 @@ def main():
         server.start(tornado_options.workers)
     io_loop = tornado.ioloop.IOLoop.instance()
     {%- if cookiecutter.use_database == 'y' %}
-    postgres.init(io_loop)
+    postgres_settings = dict(
+        max_pool_size=tornado_options.postgres_max_pool_size,
+        reconnect_interval=tornado_options.postgres_reconnect_interval
+    )
+    postgres.init(tornado_options.postgres_uri, io_loop=io_loop,
+                  **postgres_settings)
     {%- endif %}
     io_loop.start()
