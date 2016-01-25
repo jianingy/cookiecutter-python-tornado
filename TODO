@@ -1,3 +1,0 @@
-* do not expose db connect to cmd.py
-* deal with empty result in common/database fetchall_as_dict
-* add a fetchone_as_dict

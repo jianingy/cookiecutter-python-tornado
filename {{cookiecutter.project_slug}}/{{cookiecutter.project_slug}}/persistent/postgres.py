@@ -86,6 +86,13 @@ class PostgreSQLConnector(object):
         return cls.connection().close()
 
 
+def init(io_loop=None):
+    if not io_loop:
+        io_loop = tornado.ioloop.IOLoop.instance()
+    database = PostgreSQLConnector()
+    io_loop.add_callback(database.connect)
+
+
 def connection(method=None, name="master"):
 
     def wrapper(function):

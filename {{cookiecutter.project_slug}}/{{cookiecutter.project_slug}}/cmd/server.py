@@ -14,7 +14,7 @@
 #
 from {{cookiecutter.project_slug}}.application import Application
 {%- if cookiecutter.use_database %}
-from {{cookiecutter.project_slug}}.persistent.postgres import PostgreSQLConnector
+from {{cookiecutter.project_slug}}.persistent import postgres
 {%- endif %}
 from tornado.options import (define as tornado_define,
                              options as tornado_options,
@@ -46,7 +46,6 @@ def main():
         server.start(tornado_options.workers)
     io_loop = tornado.ioloop.IOLoop.instance()
     {%- if cookiecutter.use_database %}
-    database = PostgreSQLConnector()
-    io_loop.add_callback(database.connect)
+    postgres.init(io_loop)
     {%- endif %}
     io_loop.start()
