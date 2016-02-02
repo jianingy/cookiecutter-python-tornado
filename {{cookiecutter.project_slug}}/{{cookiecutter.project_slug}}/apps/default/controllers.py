@@ -27,6 +27,7 @@ class IndexController(controller.HTMLBaseController):
         self.response('default/default',
                       dict(version=version))
 
+
 @route('/api/v1/version')
 class VersionController(controller.APIBaseController):
 
@@ -35,7 +36,7 @@ class VersionController(controller.APIBaseController):
         version = pkg_resources.require('{{ cookiecutter.project_slug }}')[0].version
         self.response(dict(version=version))
 
-{%- if cookiecutter.use_database == 'y' %}
+{% if cookiecutter.use_database == 'y' %}
 @route('/api/v1/add/(\d+)/(\d+)')
 class AddController(controller.APIBaseController):
 
@@ -44,7 +45,7 @@ class AddController(controller.APIBaseController):
         from {{cookiecutter.project_slug}}.apps.default.services import add
         retval = yield add(x, y)
         self.response(dict(x=x, y=y, val=retval))
-{%- endif %}
+{% endif %}
 
 @route('/api/v1/mul')
 class MulController(controller.APIBaseController):
