@@ -17,6 +17,7 @@ from os.path import join as path_join, dirname
 from tornado.options import (define as tornado_define,
                              options as tornado_options,
                              parse_config_file)
+from tornado.log import enable_pretty_logging
 from tornado.process import fork_processes
 from tornado.util import import_object
 from warnings import warn
@@ -29,7 +30,6 @@ import tornado.httpserver
 tornado_define('workers', default=1,
                help="num of workers", type=int)
 tornado_define('debug', default=False, help="debug", type=bool)
-tornado_define('bind', default='127.0.0.1:8000', help="server bind address")
 tornado_define("config", type=str, help="path to config file",
                callback=lambda path: parse_config_file(path, final=False))
 
@@ -42,7 +42,8 @@ class TornadoServerMixin(object):
         pass
 
     def start_server(self):
-        from tornado.log import enable_pretty_logging
+        tornado_define('bind', default='127.0.0.1:8000',
+                       help="server bind address")
         enable_pretty_logging()
         tornado.options.parse_command_line()
 
