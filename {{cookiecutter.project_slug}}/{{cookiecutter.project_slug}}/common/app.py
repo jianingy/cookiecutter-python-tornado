@@ -22,6 +22,7 @@ from tornado.process import fork_processes
 from tornado.util import import_object
 from warnings import warn
 import logging
+import logging.config
 import tornado.web
 import tornado.ioloop
 import tornado.httpserver
@@ -44,8 +45,11 @@ class TornadoServerMixin(object):
     def start_server(self):
         tornado_define('bind', default='127.0.0.1:8000',
                        help="server bind address")
-        enable_pretty_logging()
         tornado.options.parse_command_line()
+        if tornado_options.logging_config:
+            logging.config.fileConfig(tornado_options.logging_config,
+                                      disable_existing_loggers=False)
+        enable_pretty_logging()
 
         bind_address, bind_port = tornado_options.bind.split(':', 1)
 
@@ -67,9 +71,11 @@ class TornadoDaemonMixin(object):
 
     def run(self):
         from tornado.log import enable_pretty_logging
-        enable_pretty_logging()
         tornado.options.parse_command_line()
-
+        if tornado_options.logging_config:
+            logging.config.fileConfig(tornado_options.logging_config,
+                                      disable_existing_loggers=False)
+        enable_pretty_logging()
         self.tid = 0
         if tornado_options.workers != 1:
             # fork_process never return in parent process

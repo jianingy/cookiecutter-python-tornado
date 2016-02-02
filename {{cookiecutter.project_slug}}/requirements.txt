@@ -3,3 +3,4 @@ tornado
 {%- if cookiecutter.use_database == 'y' %}
 momoko
 {%- endif %}
+colorlog
