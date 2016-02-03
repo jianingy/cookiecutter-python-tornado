@@ -17,7 +17,6 @@ from os.path import join as path_join, dirname
 from tornado.options import (define as tornado_define,
                              options as tornado_options,
                              parse_config_file)
-from tornado.log import enable_pretty_logging
 from tornado.process import fork_processes
 from tornado.util import import_object
 from warnings import warn
@@ -31,13 +30,60 @@ import tornado.httpserver
 tornado_define('workers', default=1,
                help="num of workers", type=int)
 tornado_define('debug', default=False, help="debug", type=bool)
+tornado_define("logging-config", default='',
+               help="path to logging config file")
 tornado_define("config", type=str, help="path to config file",
                callback=lambda path: parse_config_file(path, final=False))
 
 LOG = logging.getLogger('tornado.application')
+LOGGING_CONFIG = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'colorlog': {
+            '()': 'colorlog.ColoredFormatter',
+            'format': '%(log_color)s<%(process)d>[%(levelname)1.1s %(asctime)s %(module)s:%(lineno)d] %(message)s%(reset)s',
+            'datefmt': '%y%m%d %H:%M:%S',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'colorlog',
+        },
+    },
+    'loggers': {
+        '': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True
+        },
+        'app.biz': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False
+        },
+    }
+}
 
 
-class TornadoServerMixin(object):
+class BaseCommand(object):
+
+    def enable_logging(self):
+        if tornado_options.debug:
+            level = 'DEBUG'
+        else:
+            level = tornado_options.logging.upper()
+        logging.config.dictConfig(LOGGING_CONFIG)
+        if tornado_options.logging_config:
+            logging.config.fileConfig(tornado_options.logging_config,
+                                      disable_existing_loggers=False)
+        logger = logging.getLogger()
+        logger.setLevel(getattr(logging, level))
+
+
+class TornadoServerMixin(BaseCommand):
 
     def before_server_start(self, io_loop):
         pass
@@ -46,11 +92,7 @@ class TornadoServerMixin(object):
         tornado_define('bind', default='127.0.0.1:8000',
                        help="server bind address")
         tornado.options.parse_command_line()
-        if tornado_options.logging_config:
-            logging.config.fileConfig(tornado_options.logging_config,
-                                      disable_existing_loggers=False)
-        enable_pretty_logging()
-
+        self.enable_logging()
         bind_address, bind_port = tornado_options.bind.split(':', 1)
 
         if tornado_options.debug:
@@ -64,18 +106,14 @@ class TornadoServerMixin(object):
         io_loop.start()
 
 
-class TornadoDaemonMixin(object):
+class TornadoDaemonMixin(BaseCommand):
 
     def before_run(self, io_loop):
         pass
 
     def run(self):
-        from tornado.log import enable_pretty_logging
         tornado.options.parse_command_line()
-        if tornado_options.logging_config:
-            logging.config.fileConfig(tornado_options.logging_config,
-                                      disable_existing_loggers=False)
-        enable_pretty_logging()
+        self.enable_logging()
         self.tid = 0
         if tornado_options.workers != 1:
             # fork_process never return in parent process
