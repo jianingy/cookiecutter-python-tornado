@@ -88,17 +88,19 @@ class TornadoServerMixin(BaseCommand):
     def before_server_start(self, io_loop):
         pass
 
-    def start_server(self):
+    @classmethod
+    def start_server(cls):
         tornado_define('bind', default='127.0.0.1:8000',
                        help="server bind address")
         tornado.options.parse_command_line()
-        self.enable_logging()
+        app = cls()
+        app.enable_logging()
         bind_address, bind_port = tornado_options.bind.split(':', 1)
 
         if tornado_options.debug:
-            self.listen(int(bind_port), address=bind_address)
+            app.listen(int(bind_port), address=bind_address)
         else:
-            server = tornado.httpserver.HTTPServer(self)
+            server = tornado.httpserver.HTTPServer(app)
             server.bind(int(bind_port), address=bind_address)
             server.start(tornado_options.workers)
         io_loop = tornado.ioloop.IOLoop.instance()
@@ -111,19 +113,21 @@ class TornadoDaemonMixin(BaseCommand):
     def before_run(self, io_loop):
         pass
 
-    def run(self):
+    @classmethod
+    def run(cls):
         tornado.options.parse_command_line()
-        self.enable_logging()
-        self.tid = 0
+        app = cls()
+        app.enable_logging()
+        app.tid = 0
         if tornado_options.workers != 1:
             # fork_process never return in parent process
             # instead it will exit the program when all its
             # children quit.
-            self.tid = fork_processes(tornado_options.workers)
-            LOG.info('process #%s started' % self.tid)
+            app.tid = fork_processes(tornado_options.workers)
+            LOG.info('process #%s started' % app.tid)
 
         io_loop = tornado.ioloop.IOLoop.instance()
-        self.before_run(io_loop)
+        app.before_run(io_loop)
         io_loop.start()
 
 
@@ -149,7 +153,7 @@ class WebApplication(tornado.web.Application):
                 warn('Failed to load app %s: %s' % (app, e))
         route = import_object('{{cookiecutter.project_slug}}.common.route')
         controllers = route.route.get_routes()
-        tornado.web.Application.__init__(self, controllers, **webapp_settings)
+        super(WebApplication, self).__init__(controllers, **webapp_settings)
 
 
 class ApiApplication(tornado.web.Application):
@@ -168,4 +172,4 @@ class ApiApplication(tornado.web.Application):
                 warn('Failed to load app %s: %s' % (app, e))
         route = import_object('{{cookiecutter.project_slug}}.common.route')
         controllers = route.route.get_routes()
-        tornado.web.Application.__init__(self, controllers, **webapp_settings)
+        super(ApiApplication, self).__init__(controllers, **webapp_settings)
