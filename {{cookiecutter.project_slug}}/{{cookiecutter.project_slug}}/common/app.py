@@ -133,7 +133,7 @@ class WebApplication(tornado.web.Application):
     ui_modules = []
 
     def __init__(self):
-        server_root = dirname(__file__)
+        server_root = dirname(dirname(__file__))
         webapp_settings = dict(
             debug=tornado_options.debug,
             autoreload=tornado_options.debug,
