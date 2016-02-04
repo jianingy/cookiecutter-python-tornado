@@ -81,7 +81,7 @@ def init(uri, name='master', io_loop=None, **kwargs):
     io_loop.add_callback(instance.connect, uri, **kwargs)
 
 
-def connection(method=None, name="master"):
+def with_postgres(method=None, name="master"):
 
     def wrapper(function):
 
