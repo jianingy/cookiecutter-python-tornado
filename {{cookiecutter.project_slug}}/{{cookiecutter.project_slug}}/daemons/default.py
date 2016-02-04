@@ -30,4 +30,4 @@ class Daemon(TornadoDaemonMixin):
 
 
 def run():
-    Daemon().run()
+    Daemon.run()
