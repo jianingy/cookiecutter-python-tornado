@@ -50,4 +50,4 @@ class Server(WebApplication, TornadoServerMixin):
 
 
 def run():
-    Server.start_server()
+    Server.instance().start_server()

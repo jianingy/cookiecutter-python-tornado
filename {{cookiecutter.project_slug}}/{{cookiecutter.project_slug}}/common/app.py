@@ -70,6 +70,8 @@ LOGGING_CONFIG = {
 
 class BaseCommand(object):
 
+    _command_instance = None
+
     def enable_logging(self):
         if tornado_options.debug:
             level = 'DEBUG'
@@ -82,6 +84,12 @@ class BaseCommand(object):
         logger = logging.getLogger()
         logger.setLevel(getattr(logging, level))
 
+    @classmethod
+    def instance(cls):
+        if not cls._command_instance:
+            cls._command_instance = cls()
+        return cls._command_instance
+
 
 class TornadoServerMixin(BaseCommand):
 
@@ -93,18 +101,18 @@ class TornadoServerMixin(BaseCommand):
         tornado_define('bind', default='127.0.0.1:8000',
                        help="server bind address")
         tornado.options.parse_command_line()
-        app = cls()
-        app.enable_logging()
+        instance = cls.instance()
+        instance.enable_logging()
         bind_address, bind_port = tornado_options.bind.split(':', 1)
 
         if tornado_options.debug:
-            app.listen(int(bind_port), address=bind_address)
+            instance.listen(int(bind_port), address=bind_address)
         else:
-            server = tornado.httpserver.HTTPServer(app)
+            server = tornado.httpserver.HTTPServer(instance)
             server.bind(int(bind_port), address=bind_address)
             server.start(tornado_options.workers)
         io_loop = tornado.ioloop.IOLoop.instance()
-        self.before_server_start(io_loop)
+        instance.before_server_start(io_loop)
         io_loop.start()
 
 
@@ -116,18 +124,18 @@ class TornadoDaemonMixin(BaseCommand):
     @classmethod
     def run(cls):
         tornado.options.parse_command_line()
-        app = cls()
-        app.enable_logging()
-        app.tid = 0
+        instance = cls.instance()
+        instance.enable_logging()
+        instance.tid = 0
         if tornado_options.workers != 1:
             # fork_process never return in parent process
             # instead it will exit the program when all its
             # children quit.
-            app.tid = fork_processes(tornado_options.workers)
-            LOG.info('process #%s started' % app.tid)
+            instance.tid = fork_processes(tornado_options.workers)
+            LOG.info('process #%s started' % instance.tid)
 
         io_loop = tornado.ioloop.IOLoop.instance()
-        app.before_run(io_loop)
+        instance.before_run(io_loop)
         io_loop.start()
 
 
