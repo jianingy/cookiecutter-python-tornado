@@ -1,8 +1,21 @@
-{% raw %}
 <html>
     <body>
+        {% try %}
+        {% if error_code %}
         <h1>Error {{ error_code }}: {{ title }}</h1>
         <p>{{ description }}</p>
+        {% end %}
+        {% except %}
+        {% end %}
+
+        {% try %}
+        {% if traceback %}
+        <h1>Traceback</h1>
+        <pre>
+{{ "".join(traceback) }}
+        </pre>
+        {% end %}
+        {% except %}
+        {% end %}
     </body>
 </html>
-{% endraw %}
