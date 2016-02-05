@@ -12,12 +12,12 @@
 # +--+--+--+--+--+--+--+--+--+--+--+--+--+
 #                              2 Feb, 2016
 #
-from {{cookiecutter.project_slug}}.common.app import TornadoDaemonMixin
+from {{cookiecutter.project_slug}}.common.app import DaemonApplication, run_daemon
 from datetime import timedelta
 import tornado.ioloop
 
 
-class Daemon(TornadoDaemonMixin):
+class Daemon(DaemonApplication):
 
     def hello(self):
         print "#%s says hello" % self.tid
@@ -30,4 +30,4 @@ class Daemon(TornadoDaemonMixin):
 
 
 def run():
-    Daemon.instance().run()
+    run_daemon(Daemon)

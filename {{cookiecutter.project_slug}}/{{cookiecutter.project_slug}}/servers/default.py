@@ -12,8 +12,7 @@
 # +--+--+--+--+--+--+--+--+--+--+--+--+--+
 #                              2 Feb, 2016
 #
-from {{cookiecutter.project_slug}}.common.app import TornadoServerMixin
-from {{cookiecutter.project_slug}}.common.app import WebApplication
+from {{cookiecutter.project_slug}}.common.app import WebApplication, start_server
 {%- if cookiecutter.use_database == 'y' %}
 from {{cookiecutter.project_slug}}.storage import postgres
 {%- endif %}
@@ -33,7 +32,7 @@ tornado_define('postgres-reconnect-interval', default=5,
 {%- endif %}
 
 
-class Server(WebApplication, TornadoServerMixin):
+class Server(WebApplication):
 
     enabled_apps = ['{{cookiecutter.project_slug}}.apps.default']
 
@@ -50,4 +49,4 @@ class Server(WebApplication, TornadoServerMixin):
 
 
 def run():
-    Server.instance().start_server()
+    start_server(Server)

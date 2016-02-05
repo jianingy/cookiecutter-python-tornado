@@ -68,78 +68,17 @@ LOGGING_CONFIG = {
 }
 
 
-class BaseCommand(object):
-
-    _command_instance = None
-
-    def enable_logging(self):
-        if tornado_options.debug:
-            level = 'DEBUG'
-        else:
-            level = tornado_options.logging.upper()
-        logging.config.dictConfig(LOGGING_CONFIG)
-        if tornado_options.logging_config:
-            logging.config.fileConfig(tornado_options.logging_config,
-                                      disable_existing_loggers=False)
-        logger = logging.getLogger()
-        logger.setLevel(getattr(logging, level))
+class SingletonMixin(object):
 
     @classmethod
     def instance(cls):
-        if not cls._command_instance:
-            cls._command_instance = cls()
-        return cls._command_instance
+        v = '_instance'
+        if not hasattr(cls, v):
+            setattr(cls, v, cls())
+        return cls._instance
 
 
-class TornadoServerMixin(BaseCommand):
-
-    def before_server_start(self, io_loop):
-        pass
-
-    @classmethod
-    def start_server(cls):
-        tornado_define('bind', default='127.0.0.1:8000',
-                       help="server bind address")
-        tornado.options.parse_command_line()
-        instance = cls.instance()
-        instance.enable_logging()
-        bind_address, bind_port = tornado_options.bind.split(':', 1)
-
-        if tornado_options.debug:
-            instance.listen(int(bind_port), address=bind_address)
-        else:
-            server = tornado.httpserver.HTTPServer(instance)
-            server.bind(int(bind_port), address=bind_address)
-            server.start(tornado_options.workers)
-        io_loop = tornado.ioloop.IOLoop.instance()
-        instance.before_server_start(io_loop)
-        io_loop.start()
-
-
-class TornadoDaemonMixin(BaseCommand):
-
-    def before_run(self, io_loop):
-        pass
-
-    @classmethod
-    def run(cls):
-        tornado.options.parse_command_line()
-        instance = cls.instance()
-        instance.enable_logging()
-        instance.tid = 0
-        if tornado_options.workers != 1:
-            # fork_process never return in parent process
-            # instead it will exit the program when all its
-            # children quit.
-            instance.tid = fork_processes(tornado_options.workers)
-            LOG.info('process #%s started' % instance.tid)
-
-        io_loop = tornado.ioloop.IOLoop.instance()
-        instance.before_run(io_loop)
-        io_loop.start()
-
-
-class WebApplication(tornado.web.Application):
+class WebApplication(tornado.web.Application, SingletonMixin):
 
     enabled_apps = []
     ui_modules = []
@@ -164,7 +103,7 @@ class WebApplication(tornado.web.Application):
         super(WebApplication, self).__init__(controllers, **webapp_settings)
 
 
-class ApiApplication(tornado.web.Application):
+class ApiApplication(tornado.web.Application, SingletonMixin):
 
     enabled_apps = []
 
@@ -181,3 +120,56 @@ class ApiApplication(tornado.web.Application):
         route = import_object('{{cookiecutter.project_slug}}.common.route')
         controllers = route.route.get_routes()
         super(ApiApplication, self).__init__(controllers, **webapp_settings)
+
+
+class DaemonApplication(SingletonMixin):
+    pass
+
+
+def enable_logging():
+    if tornado_options.debug:
+        level = 'DEBUG'
+    else:
+        level = tornado_options.logging.upper()
+    logging.config.dictConfig(LOGGING_CONFIG)
+    if tornado_options.logging_config:
+        logging.config.fileConfig(tornado_options.logging_config,
+                                  disable_existing_loggers=False)
+    logger = logging.getLogger()
+    logger.setLevel(getattr(logging, level))
+
+
+def start_server(server_class):
+    tornado_define('bind', default='127.0.0.1:8000',
+                   help="server bind address")
+    tornado.options.parse_command_line()
+    enable_logging()
+    instance = server_class.instance()
+    bind_address, bind_port = tornado_options.bind.split(':', 1)
+
+    if tornado_options.debug:
+        instance.listen(int(bind_port), address=bind_address)
+    else:
+        server = tornado.httpserver.HTTPServer(instance)
+        server.bind(int(bind_port), address=bind_address)
+        server.start(tornado_options.workers)
+    io_loop = tornado.ioloop.IOLoop.instance()
+    instance.before_server_start(io_loop)
+    io_loop.start()
+
+
+def run_daemon(daemon_class):
+    tornado.options.parse_command_line()
+    enable_logging()
+    instance = daemon_class.instance()
+    instance.tid = 0
+    if tornado_options.workers != 1:
+        # fork_process never return in parent process
+        # instead it will exit the program when all its
+        # children quit.
+        instance.tid = fork_processes(tornado_options.workers)
+        LOG.info('process #%s started' % instance.tid)
+
+    io_loop = tornado.ioloop.IOLoop.instance()
+    instance.before_run(io_loop)
+    io_loop.start()
