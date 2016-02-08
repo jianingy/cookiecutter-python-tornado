@@ -43,8 +43,9 @@ class Server(WebApplication):
             max_pool_size=tornado_options.postgres_max_pool_size,
             reconnect_interval=tornado_options.postgres_reconnect_interval
         )
-        postgres.init(tornado_options.postgres_uri, io_loop=io_loop,
-                      **postgres_settings)
+        f = postgres.init(tornado_options.postgres_uri, io_loop=io_loop,
+                          **postgres_settings)
+        io_loop.add_future(f, lambda x: x)
         {%- endif %}
 
 
