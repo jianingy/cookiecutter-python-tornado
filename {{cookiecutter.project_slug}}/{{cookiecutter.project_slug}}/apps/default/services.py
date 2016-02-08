@@ -13,7 +13,7 @@
 #                             22 Jan, 2016
 #
 {%- if cookiecutter.use_database == 'y' %}
-from {{cookiecutter.project_slug}}.storage.postgres import with_postgres
+from {{cookiecutter.project_slug}}.common.postgres import with_postgres
 from {{cookiecutter.project_slug}}.common.database import fetchall_as_dict
 from tornado.gen import coroutine, Return
 

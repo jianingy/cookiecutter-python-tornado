@@ -14,7 +14,7 @@
 #
 from {{cookiecutter.project_slug}}.common.app import WebApplication, start_server
 {%- if cookiecutter.use_database == 'y' %}
-from {{cookiecutter.project_slug}}.storage import postgres
+from {{cookiecutter.project_slug}}.common import postgres
 {%- endif %}
 from tornado.options import (define as tornado_define,
                              options as tornado_options)
