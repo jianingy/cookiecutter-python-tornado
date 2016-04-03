@@ -12,22 +12,20 @@
 # +--+--+--+--+--+--+--+--+--+--+--+--+--+
 #                              2 Feb, 2016
 #
-from {{cookiecutter.project_slug}}.common.app import DaemonApplication, run_daemon
+from {{cookiecutter.project_slug}}.common.app import ConsoleApplication, run_app
 from datetime import timedelta
+from tornado.gen import coroutine, sleep
 import tornado.ioloop
 
 
-class Daemon(DaemonApplication):
+class CronApp(ConsoleApplication):
 
-    def hello(self):
-        print "#%s says hello" % self.tid
-        io_loop = tornado.ioloop.IOLoop.instance()
-        io_loop.call_later(1, self.hello)
-
-    def before_run(self, io_loop):
-        io_loop.call_later(1, self.hello)
-        io_loop.add_timeout(timedelta(seconds=5), lambda: io_loop.stop())
+    @coroutine
+    def run(self):
+        while True:
+            print "#%s says hello" % self.tid
+            yield sleep(3)
 
 
 def run():
-    run_daemon(Daemon)
+    run_app(CronApp)

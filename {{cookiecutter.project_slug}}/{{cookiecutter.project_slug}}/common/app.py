@@ -14,6 +14,7 @@
 #
 
 from os.path import join as path_join, dirname
+from tornado.gen import coroutine
 from tornado.options import (define as tornado_define,
                              options as tornado_options,
                              parse_config_file)
@@ -22,17 +23,18 @@ from tornado.util import import_object
 from warnings import warn
 import logging
 import logging.config
-import tornado.web
-import tornado.ioloop
 import tornado.httpserver
+import tornado.ioloop
+import tornado.web
 
 
 tornado_define('workers', default=1,
+               group='main',
                help="num of workers", type=int)
-tornado_define('debug', default=False, help="debug", type=bool)
-tornado_define("logging-config", default='',
+tornado_define('debug', default=False, help="debug", group='main', type=bool)
+tornado_define("logging-config", default='', group='main',
                help="path to logging config file")
-tornado_define("config", type=str, help="path to config file",
+tornado_define("config", type=str, help="path to config file", group='main',
                callback=lambda path: parse_config_file(path, final=False))
 
 LOG = logging.getLogger('tornado.application')
@@ -42,7 +44,9 @@ LOGGING_CONFIG = {
     'formatters': {
         'colorlog': {
             '()': 'colorlog.ColoredFormatter',
-            'format': '%(log_color)s<%(process)d>[%(levelname)1.1s %(asctime)s %(module)s:%(lineno)d] %(message)s%(reset)s',
+            'format': ('%(log_color)s<%(process)d>[%(levelname)1.1s '
+                       '%(asctime)s %(module)s:%(lineno)d] '
+                       '%(message)s%(reset)s'),
             'datefmt': '%y%m%d %H:%M:%S',
         },
     },
@@ -102,6 +106,9 @@ class WebApplication(tornado.web.Application, SingletonMixin):
         controllers = route.route.get_routes()
         super(WebApplication, self).__init__(controllers, **webapp_settings)
 
+    def before_run(self, io_loop):
+        pass
+
 
 class ApiApplication(tornado.web.Application, SingletonMixin):
 
@@ -122,8 +129,22 @@ class ApiApplication(tornado.web.Application, SingletonMixin):
         super(ApiApplication, self).__init__(controllers, **webapp_settings)
 
 
-class DaemonApplication(SingletonMixin):
-    pass
+class ConsoleApplication(SingletonMixin):
+
+    @coroutine
+    def run(self):
+        raise NotImplementedError()
+
+    def before_run(self, io_loop):
+        pass
+
+    def write_error(self, future):
+        try:
+            future.result()
+        except:
+            io_loop = tornado.ioloop.IOLoop.instance()
+            io_loop.stop()
+            raise
 
 
 def enable_logging():
@@ -139,12 +160,12 @@ def enable_logging():
     logger.setLevel(getattr(logging, level))
 
 
-def start_server(server_class):
-    tornado_define('bind', default='127.0.0.1:8000',
+def run_web_app(app_class):
+    tornado_define('bind', default='127.0.0.1:8000', group='main',
                    help="server bind address")
     tornado.options.parse_command_line()
     enable_logging()
-    instance = server_class.instance()
+    instance = app_class.instance()
     bind_address, bind_port = tornado_options.bind.split(':', 1)
 
     if tornado_options.debug:
@@ -154,14 +175,14 @@ def start_server(server_class):
         server.bind(int(bind_port), address=bind_address)
         server.start(tornado_options.workers)
     io_loop = tornado.ioloop.IOLoop.instance()
-    instance.before_server_start(io_loop)
+    instance.before_run(io_loop)
     io_loop.start()
 
 
-def run_daemon(daemon_class):
+def run_console_app(app_class):
     tornado.options.parse_command_line()
     enable_logging()
-    instance = daemon_class.instance()
+    instance = app_class.instance()
     instance.tid = 0
     if tornado_options.workers != 1:
         # fork_process never return in parent process
@@ -172,4 +193,16 @@ def run_daemon(daemon_class):
 
     io_loop = tornado.ioloop.IOLoop.instance()
     instance.before_run(io_loop)
+    io_loop.add_future(instance.run(), instance.write_error)
     io_loop.start()
+
+
+def run_app(app_class):
+
+    if issubclass(app_class, WebApplication):
+        run_web_app(app_class)
+    elif issubclass(app_class, ConsoleApplication):
+        run_console_app(app_class)
+    else:
+        LOG.error('%s is not a valid app class' % app_class)
+        raise NotImplementedError()

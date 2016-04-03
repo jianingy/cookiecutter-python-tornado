@@ -12,7 +12,7 @@
 # +--+--+--+--+--+--+--+--+--+--+--+--+--+
 #                              2 Feb, 2016
 #
-from {{cookiecutter.project_slug}}.common.app import WebApplication, start_server
+from {{cookiecutter.project_slug}}.common.app import WebApplication, run_app
 {%- if cookiecutter.use_database == 'y' %}
 from {{cookiecutter.project_slug}}.common import postgres
 {%- endif %}
@@ -32,11 +32,11 @@ tornado_define('postgres-reconnect-interval', default=5,
 {%- endif %}
 
 
-class Server(WebApplication):
+class WebAppServer(WebApplication):
 
     enabled_apps = ['{{cookiecutter.project_slug}}.apps.default']
 
-    def before_server_start(self, io_loop):
+    def before_run(self, io_loop):
         LOG.info('Starting default server ...')
         {%- if cookiecutter.use_database == 'y' %}
         postgres_settings = dict(
@@ -50,4 +50,4 @@ class Server(WebApplication):
 
 
 def run():
-    start_server(Server)
+    run_app(WebAppServer)
