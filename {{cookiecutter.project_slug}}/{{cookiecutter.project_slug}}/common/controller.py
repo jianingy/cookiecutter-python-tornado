@@ -52,7 +52,7 @@ class APIBaseController(BaseController):
         except:
             self.fail(400001, title='Invalid JSON data')
 
-    def response(self, data):
+    def reply(self, data):
         self.set_header('Content-Type', 'application/json; charset=UTF-8')
         self.finish(json_encode(data))
 
@@ -65,12 +65,12 @@ class APIBaseController(BaseController):
                 error = dict()
             if tornado_options.debug:
                 error['traceback'] = format_exception(exc_type, exc, trace)
-            self.response(error)
+            self.reply(error)
 
 
 class HTMLBaseController(BaseController):
 
-    def response(self, name, data):
+    def reply(self, name, data):
         self.set_header('Content-Type', 'text/html; charset=UTF-8')
         self.render('%s.html' % name, **data)
 
@@ -83,4 +83,4 @@ class HTMLBaseController(BaseController):
                 error = dict()
             if tornado_options.debug:
                 error['traceback'] = format_exception(exc_type, exc, trace)
-            self.response('error', error)
+            self.reply('error', error)
