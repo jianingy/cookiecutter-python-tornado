@@ -13,6 +13,10 @@
 #                              2 Feb, 2016
 #
 
+# disable_tornado_logging_options
+from tornado import log as tornado_log
+tornado_log.define_logging_options = lambda x: x
+
 from os.path import join as path_join, dirname
 from tornado.gen import coroutine
 from tornado.options import (define as tornado_define,
@@ -36,6 +40,10 @@ tornado_define("logging-config", default='', group='main',
                help="path to logging config file")
 tornado_define("config", type=str, help="path to config file", group='main',
                callback=lambda path: parse_config_file(path, final=False))
+tornado_define('logging', default='info', group='main',
+               metavar='debug|info|warn|error|none',
+               help="server bind address")
+
 
 LOG = logging.getLogger('tornado.application')
 LOGGING_CONFIG = {

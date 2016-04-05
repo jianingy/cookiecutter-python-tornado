@@ -23,11 +23,11 @@ import logging
 LOG = logging.getLogger('tornado.application')
 
 {%- if cookiecutter.use_database == 'y' %}
-tornado_define('postgres-uri', default='postgres:///',
+tornado_define('postgres-uri', default='postgres:///', group='database',
                help="postgresql connection uri")
-tornado_define('postgres-max-pool-size', default=4,
+tornado_define('postgres-max-pool-size', default=4, group='database',
                help='maximum connection pool size of PostgreSQL')
-tornado_define('postgres-reconnect-interval', default=5,
+tornado_define('postgres-reconnect-interval', default=5, group='database',
                help='maximum connection pool size of PostgreSQL')
 {%- endif %}
 
