@@ -92,8 +92,7 @@ class SingletonMixin(object):
 
 class WebApplication(tornado.web.Application, SingletonMixin):
 
-    enabled_apps = []
-    ui_modules = []
+    enabled_apps, ui_modules, ui_methods = [], [], []
 
     def __init__(self):
         server_root = dirname(dirname(__file__))
@@ -101,6 +100,7 @@ class WebApplication(tornado.web.Application, SingletonMixin):
             debug=tornado_options.debug,
             autoreload=tornado_options.debug,
             ui_modules=self.ui_modules,
+            ui_methods=self.ui_methods,
             template_path=path_join(server_root, "templates"),
             static_path=path_join(server_root, "static"),
         )
