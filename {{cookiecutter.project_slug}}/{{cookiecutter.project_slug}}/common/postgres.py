@@ -59,7 +59,7 @@ class PostgreSQLConnector(object):
                                 dbname=r.path.lstrip('/') or r.username)
         interval = kwd.get('reconnect_interval', 5)
         size = kwd.get('max_pool_size', 4)
-        LOG.info('Database connection string is %s' % dsn)
+        LOG.info('postgresql connection string is %s' % dsn)
         cls._pool = momoko.Pool(
             dsn=dsn,
             reconnect_interval=interval,

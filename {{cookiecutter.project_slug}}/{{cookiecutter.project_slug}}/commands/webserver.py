@@ -37,7 +37,7 @@ class WebAppServer(WebApplication):
     enabled_apps = ['{{cookiecutter.project_slug}}.apps.default']
 
     def before_run(self, io_loop):
-        LOG.info('Starting default server ...')
+        LOG.info('starting default server ...')
         {%- if cookiecutter.use_database == 'y' %}
         postgres_settings = dict(
             max_pool_size=tornado_options.postgres_max_pool_size,
