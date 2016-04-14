@@ -1,6 +1,8 @@
 # The route helpers were originally written by
 # Jeremy Kelley (http://github.com/nod).
 
+# modified by jianing.yang (http://github.com/jianingy)
+
 import tornado.web
 
 
@@ -43,7 +45,17 @@ class route(object):
     def __call__(self, _handler):
         """gets called when we class decorate"""
         name = self.name and self.name or _handler.__name__
-        self._routes.append(tornado.web.url(self._uri, _handler, name=name))
+        if issubclass(_handler, tornado.web.StaticFileHandler):
+            settings = {
+                'path': _handler.path,
+                'default_filename': _handler.default_filename,
+            }
+            print settings
+            self._routes.append(tornado.web.url(self._uri, _handler,
+                                                name=name, kwargs=settings))
+        else:
+            self._routes.append(tornado.web.url(self._uri, _handler,
+                                                name=name))
         return _handler
 
     @classmethod
