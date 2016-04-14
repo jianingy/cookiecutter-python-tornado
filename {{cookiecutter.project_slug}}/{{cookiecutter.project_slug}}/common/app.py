@@ -94,7 +94,7 @@ class WebApplication(tornado.web.Application, SingletonMixin):
 
     enabled_apps, ui_modules, ui_methods = [], [], []
 
-    def __init__(self):
+    def __init__(self, settings=None):
         server_root = dirname(dirname(__file__))
         webapp_settings = dict(
             debug=tornado_options.debug,
@@ -104,6 +104,8 @@ class WebApplication(tornado.web.Application, SingletonMixin):
             template_path=path_join(server_root, "templates"),
             static_path=path_join(server_root, "static"),
         )
+        if isinstance(settings, dict):
+            webapp_settings.update(settings)
 
         for app in self.enabled_apps:
             try:
