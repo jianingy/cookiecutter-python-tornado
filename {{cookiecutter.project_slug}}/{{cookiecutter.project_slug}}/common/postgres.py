@@ -74,10 +74,36 @@ class PostgreSQLConnector(object):
         return cls.connection().close()
 
 
-def init(uri, name='master', **kwargs):
-    instance = PostgreSQLConnector.instance(name)
-    # returns a future
-    return instance.connect(uri, **kwargs)
+class PostgreSQLEngine(object):
+
+    @staticmethod
+    def register_options(name='master'):
+        opt_name = '' if name == 'master' else '-%s' % name
+        tornado_define('postgres%s-uri' % opt_name,
+                       default='postgres:///',
+                       group='%s database' % name,
+                       help="postgresql connection uri for %s" % name)
+        tornado_define('postgres%s-max-pool-size' % opt_name,
+                       default=4,
+                       group='%s database' % name,
+                       help='connection pool size for %s ' % name)
+        tornado_define('postgres%s-reconnect-interval' % opt_name,
+                       default=5,
+                       group='%s database' % name,
+                       help='reconnect interval for %s' % name)
+
+    @staticmethod
+    def start(name, io_loop=None):
+        opt_name = '' if name == 'master' else '-%s' % name
+        postgres_settings = tornado_options.group_dict('%s database' % name)
+        instance = PostgreSQLConnector.instance(name)
+        uri = postgres_settings['postgres%s-uri' % opt_name]
+        if not io_loop:
+            io_loop = IOLoop.current()
+        def _start():
+            return instance.connect(uri, **postgres_settings)
+        #io_loop.add_future(f, _done)
+        io_loop.run_sync(_start)
 
 
 def with_postgres(method=None, name="master"):
