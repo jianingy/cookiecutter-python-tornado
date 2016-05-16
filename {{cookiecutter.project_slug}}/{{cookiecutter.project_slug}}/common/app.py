@@ -145,6 +145,10 @@ class ConsoleApplication(SingletonMixin):
     def run(self):
         raise NotImplementedError()
 
+    def exit(self):
+        io_loop = tornado.ioloop.IOLoop.current()
+        io_loop.stop()
+
     def before_run(self, io_loop):
         pass
 
