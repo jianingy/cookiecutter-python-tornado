@@ -42,15 +42,10 @@ class APIBaseController(BaseController):
             return
 
         if not content_type.strip().lower().startswith('application/json'):
-            self.fail(400001,
-                      title='Request format error',
-                      description='This API only supports '
-                      'requests encoded as JSON.')
-
-        try:
-            self.data = json_decode(self.request.body)
-        except:
-            self.fail(400001, title='Invalid JSON data')
+            try:
+                self.data = json_decode(self.request.body)
+            except:
+                self.fail(400001, title='Invalid JSON data')
 
     def reply(self, data):
         self.set_header('Content-Type', 'application/json; charset=UTF-8')
