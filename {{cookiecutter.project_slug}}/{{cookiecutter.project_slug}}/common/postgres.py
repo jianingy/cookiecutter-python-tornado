@@ -14,6 +14,8 @@
 #
 from tornado.gen import coroutine
 from urlparse import urlparse
+from tornado.options import (define as tornado_define,
+                             options as tornado_options)
 import functools
 import momoko
 import logging
@@ -99,7 +101,7 @@ class PostgreSQLEngine(object):
         instance = PostgreSQLConnector.instance(name)
         uri = postgres_settings['postgres%s-uri' % opt_name]
         if not io_loop:
-            io_loop = IOLoop.current()
+            io_loop = tornado.ioloop.IOLoop.instance()
         def _start():
             return instance.connect(uri, **postgres_settings)
         #io_loop.add_future(f, _done)
