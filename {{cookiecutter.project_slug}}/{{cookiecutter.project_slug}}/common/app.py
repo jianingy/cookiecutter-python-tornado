@@ -42,7 +42,7 @@ tornado_define("config", type=str, help="path to config file", group='main',
                callback=lambda path: parse_config_file(path, final=False))
 tornado_define('logging', default='info', group='main',
                metavar='debug|info|warn|error|none',
-               help="server bind address")
+               help="logging level")
 
 
 LOG = logging.getLogger('tornado.application')
