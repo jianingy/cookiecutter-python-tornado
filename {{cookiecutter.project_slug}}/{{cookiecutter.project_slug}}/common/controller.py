@@ -41,7 +41,7 @@ class APIBaseController(BaseController):
         if not content_type:
             return
 
-        if not content_type.strip().lower().startswith('application/json'):
+        if content_type.strip().lower().startswith('application/json'):
             try:
                 self.data = json_decode(self.request.body)
             except:
